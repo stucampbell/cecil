@@ -29,6 +29,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using SR = System.Reflection;
 
 using Mono.Cecil.Cil;
@@ -846,6 +847,25 @@ namespace Mono.Cecil {
 			if (!symbol_reader.ProcessDebugHeader (directory, header))
 				throw new InvalidOperationException ();
 		}
+
+        public string GetBuildIndependentHash()
+        {
+            var byteArray = File.ReadAllBytes(Image.FileName);
+            // in memory, overwrite those parts of the assembly file content byte array that change on every build
+            // with an empty bytearray and thus make it compareable
+            var guidSection = Image.GuidHeap.Section;
+            var empty = new byte[guidSection.SizeOfRawData];
+            Buffer.BlockCopy(empty, 0, byteArray, (int)Image.TimeDateStampPosition, 4);
+            Buffer.BlockCopy(empty, 0, byteArray, (int)Image.FileChecksumPosition, 4);
+            //MVID 
+            Buffer.BlockCopy(empty, 0, byteArray, (int)guidSection.PointerToRawData, (int)guidSection.SizeOfRawData);
+            //Create Md5 Hash 
+            var md5 = new MD5CryptoServiceProvider();
+            var result = md5.ComputeHash(byteArray);
+            //Stringify hash for human readability 
+            var hashString = BitConverter.ToString(result);
+            return hashString; 
+        }
 
 #if !READ_ONLY
 

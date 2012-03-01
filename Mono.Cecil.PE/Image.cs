@@ -68,7 +68,11 @@ namespace Mono.Cecil.PE {
 			counter = GetTableLength;
 		}
 
-		public bool HasTable (Table table)
+	    public long FileChecksumPosition { get; set; }
+	    
+        public long TimeDateStampPosition { get; set; }
+
+	    public bool HasTable (Table table)
 		{
 			return GetTableLength (table) > 0;
 		}
